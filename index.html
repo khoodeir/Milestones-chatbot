@@ -1355,7 +1355,7 @@ async function sendMessage(){
 
  const data=await res.json();
 
- add(data.reply || data.output || "No reply","bot");
+ add(data.message || data.reply || data.output || "No reply","bot");
 
  }catch(e){
 
