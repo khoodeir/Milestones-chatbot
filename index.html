@@ -1254,66 +1254,91 @@ Office
   z-index:99999;
 }
 
+<style>
 #chat-header{
-  background:#7c3aed;
-  color:#fff;
-  padding:15px;
-  font-weight:bold;
+    background:#7c3aed;
+    color:#fff;
+    padding:15px;
+    font-weight:bold;
+    text-align:center;
 }
 
 #chat-messages{
-  flex:1;
-  overflow:auto;
-  padding:10px;
+    flex:1;
+    overflow-y:auto;
+    padding:12px;
+    background:#f7f7f7;
+    direction:rtl;
+    text-align:right;
+    line-height:1.8;
+    font-family:Tahoma, Arial, sans-serif;
 }
 
 .msg{
-  margin:8px 0;
+    max-width:85%;
+    padding:10px 14px;
+    margin:10px;
+    border-radius:12px;
+    white-space:pre-wrap;
+    word-break:break-word;
 }
 
 .user{
-  text-align:right;
+    background:#7c3aed;
+    color:#fff;
+    margin-left:auto;
+    text-align:right;
 }
 
 .bot{
-  text-align:left;
+    background:#ffffff;
+    color:#222;
+    margin-right:auto;
+    text-align:right;
+    border:1px solid #ddd;
 }
 
 #chat-input{
-  display:flex;
-  border-top:1px solid #ddd;
+    display:flex;
+    border-top:1px solid #ddd;
 }
 
 #message{
-  flex:1;
-  border:none;
-  padding:12px;
-  outline:none;
+    flex:1;
+    border:none;
+    padding:12px;
+    outline:none;
+    direction:auto;
 }
 
 #send{
-  width:80px;
-  border:none;
-  background:#7c3aed;
-  color:#fff;
-  cursor:pointer;
+    width:80px;
+    border:none;
+    background:#7c3aed;
+    color:#fff;
+    cursor:pointer;
 }
 </style>
 
 <button id="chat-toggle">💬</button>
 
 <div id="chat-box">
-  <div id="chat-header">Milestones AI Assistant</div>
 
-  <div id="chat-messages"></div>
+    <div id="chat-header">
+        Milestones AI Assistant
+    </div>
 
-  <div id="chat-input">
-      <input id="message" placeholder="Type your message...">
-      <button id="send">Send</button>
-  </div>
+    <div id="chat-messages"></div>
+
+    <div id="chat-input">
+        <input id="message" placeholder="Type your message...">
+        <button id="send">Send</button>
+    </div>
+
 </div>
 
 <script>
+
 const WEBHOOK="https://helmet-handrail-skipper.ngrok-free.dev/webhook-test/Milestones_ChatBot";
 
 const toggle=document.getElementById("chat-toggle");
@@ -1321,74 +1346,78 @@ const box=document.getElementById("chat-box");
 const messages=document.getElementById("chat-messages");
 
 toggle.onclick=()=>{
-  box.style.display=box.style.display==="flex"?"none":"flex";
-}
+    box.style.display=box.style.display==="flex" ? "none" : "flex";
+};
 
 function add(text,type){
-  messages.innerHTML+=`<div class="msg ${type}">${text}</div>`;
-  messages.scrollTop=messages.scrollHeight;
+
+    const div=document.createElement("div");
+
+    div.className="msg "+type;
+
+    div.dir="auto";
+
+    div.innerHTML=text;
+
+    messages.appendChild(div);
+
+    messages.scrollTop=messages.scrollHeight;
+
 }
 
 async function sendMessage(){
 
- const input=document.getElementById("message");
+    const input=document.getElementById("message");
 
- if(!input.value.trim()) return;
+    if(!input.value.trim()) return;
 
- add(input.value,"user");
+    const text=input.value;
 
- const text=input.value;
+    add(text,"user");
 
- input.value="";
-
-try{
-
-    const res = await fetch(WEBHOOK,{
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-            message:text
-        })
-    });
-
-    console.log("Status:", res.status);
-    console.log("OK:", res.ok);
-
-    const responseText = await res.text();
-
-    console.log("Response:", responseText);
-
-    if(!res.ok){
-        throw new Error("HTTP " + res.status + "\n" + responseText);
-    }
-
-    let data;
+    input.value="";
 
     try{
-        data = JSON.parse(responseText);
-    }catch{
-        throw new Error("Response is not JSON\n\n" + responseText);
+
+        const res=await fetch(WEBHOOK,{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify({
+                message:text
+            })
+        });
+
+        if(!res.ok){
+            throw new Error("HTTP "+res.status);
+        }
+
+        // لأن n8n يرجع Text
+        const reply=await res.text();
+
+        add(reply,"bot");
+
+    }catch(err){
+
+        console.error(err);
+
+        add("تعذر الاتصال بالخادم.","bot");
+
     }
-
-    add(data.message || data.reply || data.output || "No reply","bot");
-
-}catch(e){
-
-    console.error(e);
-
-    alert(e);
-
-    add("Connection Error","bot");
 
 }
 
-document.getElementById("send").onclick=sendMessage;
+document.getElementById("send").addEventListener("click",sendMessage);
 
-document.getElementById("message").addEventListener("keypress",e=>{
- if(e.key==="Enter") sendMessage();
+document.getElementById("message").addEventListener("keypress",function(e){
+
+    if(e.key==="Enter"){
+
+        sendMessage();
+
+    }
+
 });
+
 </script>
-        </body>
-</html>
