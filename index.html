@@ -1237,7 +1237,7 @@ Office
     cursor:pointer;
     box-shadow:0 15px 35px rgba(124,58,237,.45);
     transition:.3s;
-    z-index:999999;
+    z-index:2147483647;
 }
 
 #chat-toggle:hover{
@@ -1266,7 +1266,7 @@ Office
 
     animation:pop .25s;
 
-    z-index:999999;
+    z-index:2147483647;
 }
 
 @keyframes pop{
@@ -1526,10 +1526,15 @@ const WEBHOOK="https://helmet-handrail-skipper.ngrok-free.dev/webhook-test/Miles
 const toggle=document.getElementById("chat-toggle");
 const box=document.getElementById("chat-box");
 const messages=document.getElementById("chat-messages");
+add("👋 Welcome to Milestones! How can I help you today?","bot");
 
-toggle.onclick=()=>{
-    box.style.display=box.style.display==="flex" ? "none" : "flex";
-};
+toggle.addEventListener("click", () => {
+    if (getComputedStyle(box).display === "none") {
+        box.style.display = "flex";
+    } else {
+        box.style.display = "none";
+    }
+});
 
 function add(text,type){
 
@@ -1586,7 +1591,7 @@ async function sendMessage(){
         // لأن n8n يرجع Text
         const reply=await res.text();
 
-        add(reply,"bot");
+        add(reply.replace(/\n/g,"<br>"),"bot");
 
     }catch(err){
 
