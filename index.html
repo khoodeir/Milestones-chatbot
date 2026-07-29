@@ -1224,10 +1224,9 @@ Office
         
         
 <!-- ============================================================
-     Milestones AI — Website Chat Widget
-     Add this code in Odoo via: Website > Configuration > Theme
-     or Settings > Technical > Views (inherit from website.layout)
-     or as a Custom Code Snippet if you have a dedicated module.
+     Milestones AI — Website Chat Widget (text + image + voice)
+     Add this code in Odoo via: Website > Site > Theme > Custom Code
+     (paste in the "before </body>" box), NOT inside a single page.
      ============================================================ -->
 
 <style>
@@ -1418,6 +1417,22 @@ Office
     margin-top:5px;
 }
 
+/* image bubble */
+.mai-msg img.mai-img{
+    max-width:100%;
+    border-radius:12px;
+    display:block;
+    cursor:pointer;
+}
+
+/* audio bubble */
+.mai-msg audio{
+    width:220px;
+    height:36px;
+    display:block;
+}
+.mai-user audio{ filter:invert(1) hue-rotate(180deg) brightness(1.5); }
+
 /* typing indicator */
 .mai-typing{
     align-self:flex-start;
@@ -1448,12 +1463,13 @@ Office
     align-items:center;
     padding:12px;
     background:#fff;
-    gap:10px;
+    gap:8px;
     border-top:1px solid #eee;
     flex-shrink:0;
 }
 #mai-message{
     flex:1;
+    min-width:0;
     padding:12px 16px;
     border-radius:24px;
     border:1px solid #ddd;
@@ -1464,6 +1480,34 @@ Office
 }
 #mai-message:focus{ border-color:var(--mai-primary); }
 #mai-message:disabled{ background:#f5f5f5; cursor:not-allowed; }
+
+.mai-icon-btn{
+    width:40px;
+    height:40px;
+    flex-shrink:0;
+    border:none;
+    border-radius:50%;
+    background:#f1eefc;
+    color:var(--mai-primary);
+    font-size:17px;
+    cursor:pointer;
+    transition:transform .2s, background .2s, opacity .2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.mai-icon-btn:hover:not(:disabled){ background:#e6dffa; transform:scale(1.06); }
+.mai-icon-btn:disabled{ opacity:.5; cursor:not-allowed; }
+.mai-icon-btn.mai-recording{
+    background:#ef4444;
+    color:#fff;
+    animation:mai-pulse 1.2s infinite;
+}
+@keyframes mai-pulse{
+    0%{ box-shadow:0 0 0 0 rgba(239,68,68,.5); }
+    70%{ box-shadow:0 0 0 9px rgba(239,68,68,0); }
+    100%{ box-shadow:0 0 0 0 rgba(239,68,68,0); }
+}
 
 #mai-send{
     width:44px;
@@ -1482,6 +1526,42 @@ Office
 }
 #mai-send:hover:not(:disabled){ transform:scale(1.08); }
 #mai-send:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+
+/* recording bar replaces the text input while recording */
+#mai-recording-bar{
+    display:none;
+    align-items:center;
+    gap:10px;
+    flex:1;
+    min-width:0;
+    padding:0 14px;
+    height:44px;
+    border-radius:24px;
+    background:#fff5f5;
+    border:1px solid #fecaca;
+    color:#b91c1c;
+    font-size:13.5px;
+    font-weight:600;
+}
+#mai-recording-bar.mai-show{ display:flex; }
+.mai-rec-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#ef4444;
+    animation:mai-pulse 1.2s infinite;
+    flex-shrink:0;
+}
+#mai-rec-timer{ flex-shrink:0; min-width:34px; }
+#mai-rec-cancel{
+    margin-inline-start:auto;
+    background:none;
+    border:none;
+    color:#b91c1c;
+    font-size:15px;
+    cursor:pointer;
+    flex-shrink:0;
+}
 
 @media (max-width:420px){
     #mai-box{
@@ -1513,7 +1593,19 @@ Office
     <div id="mai-messages"></div>
 
     <div id="mai-input-row">
+        <input type="file" id="mai-file-input" accept="image/*" hidden>
+        <button class="mai-icon-btn" id="mai-attach" type="button" aria-label="Send an image" title="Send an image">📎</button>
+        <button class="mai-icon-btn" id="mai-mic" type="button" aria-label="Record a voice message" title="Record a voice message">🎤</button>
+
         <input id="mai-message" autocomplete="off" placeholder="Type your message...">
+
+        <div id="mai-recording-bar">
+            <span class="mai-rec-dot"></span>
+            <span id="mai-rec-timer">0:00</span>
+            <span>Recording…</span>
+            <button id="mai-rec-cancel" type="button" aria-label="Cancel recording" title="Cancel">✕</button>
+        </div>
+
         <button id="mai-send" aria-label="Send">➤</button>
     </div>
 </div>
@@ -1525,16 +1617,33 @@ Office
     // Put your webhook URL here
     var WEBHOOK = "https://helmet-handrail-skipper.ngrok-free.dev/webhook-test/Milestones_ChatBot";
 
-    var toggle   = document.getElementById("mai-toggle");
-    var closeBtn = document.getElementById("mai-close");
-    var box      = document.getElementById("mai-box");
-    var messages = document.getElementById("mai-messages");
-    var input    = document.getElementById("mai-message");
-    var sendBtn  = document.getElementById("mai-send");
-    var badge    = document.getElementById("mai-badge");
+    // Limits
+    var MAX_IMAGE_MB = 5;
+    var MAX_RECORD_SECONDS = 60;
+
+    var toggle    = document.getElementById("mai-toggle");
+    var closeBtn  = document.getElementById("mai-close");
+    var box       = document.getElementById("mai-box");
+    var messages  = document.getElementById("mai-messages");
+    var input     = document.getElementById("mai-message");
+    var sendBtn   = document.getElementById("mai-send");
+    var badge     = document.getElementById("mai-badge");
+    var attachBtn = document.getElementById("mai-attach");
+    var fileInput = document.getElementById("mai-file-input");
+    var micBtn    = document.getElementById("mai-mic");
+    var recBar    = document.getElementById("mai-recording-bar");
+    var recTimer  = document.getElementById("mai-rec-timer");
+    var recCancel = document.getElementById("mai-rec-cancel");
 
     var hasOpenedBefore = false;
     var isSending = false;
+
+    // ---- recording state ----
+    var mediaRecorder = null;
+    var recordedChunks = [];
+    var recordStartTime = 0;
+    var recordIntervalId = null;
+    var recordCancelled = false;
 
     function escapeHtml(str){
         var div = document.createElement("div");
@@ -1542,19 +1651,25 @@ Office
         return div.innerHTML;
     }
 
-    function addMessage(text, type){
+    // kind: "text" | "image" | "audio"
+    function addMessage(kind, content, type){
         var div = document.createElement("div");
         div.className = "mai-msg " + (type === "user" ? "mai-user" : "mai-bot");
         div.dir = "auto";
 
         var time = new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+        var inner = "";
 
-        var safeText = escapeHtml(text).replace(/\n/g, "<br>");
+        if(kind === "image"){
+            inner = '<img class="mai-img" src="' + content + '" alt="Sent image">';
+        } else if(kind === "audio"){
+            inner = '<audio controls src="' + content + '"></audio>';
+        } else {
+            var safeText = escapeHtml(content).replace(/\n/g, "<br>");
+            inner = '<div>' + safeText + '</div>';
+        }
 
-        div.innerHTML =
-            '<div>' + safeText + '</div>' +
-            '<div class="mai-time">' + time + '</div>';
-
+        div.innerHTML = inner + '<div class="mai-time">' + time + '</div>';
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
     }
@@ -1579,7 +1694,7 @@ Office
         input.focus();
         if(!hasOpenedBefore){
             hasOpenedBefore = true;
-            addMessage("👋 Welcome to Milestones! How can I help you today?", "bot");
+            addMessage("text", "👋 Welcome to Milestones! How can I help you today?", "bot");
         }
     }
 
@@ -1601,21 +1716,19 @@ Office
         isSending = state;
         sendBtn.disabled = state;
         input.disabled = state;
+        attachBtn.disabled = state;
+        micBtn.disabled = state;
     }
 
-    function sendMessage(){
-        var text = input.value.trim();
-        if(!text || isSending) return;
-
-        addMessage(text, "user");
-        input.value = "";
+    // ---- core: send any payload (text / image / voice) to the webhook ----
+    function sendToWebhook(payload){
         setSending(true);
         showTyping();
 
         fetch(WEBHOOK, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: text })
+            body: JSON.stringify(payload)
         })
         .then(function(res){
             if(!res.ok) throw new Error("HTTP " + res.status);
@@ -1623,12 +1736,12 @@ Office
         })
         .then(function(reply){
             hideTyping();
-            addMessage(reply || "..", "bot");
+            addMessage("text", reply || "..", "bot");
         })
         .catch(function(err){
             console.error("Milestones AI chat error:", err);
             hideTyping();
-            addMessage("⚠️ Couldn't reach the server. Please try again in a moment.", "bot");
+            addMessage("text", "⚠️ Couldn't reach the server. Please try again in a moment.", "bot");
         })
         .finally(function(){
             setSending(false);
@@ -1636,16 +1749,164 @@ Office
         });
     }
 
-    sendBtn.addEventListener("click", sendMessage);
+    // ---- text ----
+    function sendTextMessage(){
+        var text = input.value.trim();
+        if(!text || isSending) return;
 
+        addMessage("text", text, "user");
+        input.value = "";
+
+        sendToWebhook({ type: "text", message: text });
+    }
+
+    sendBtn.addEventListener("click", sendTextMessage);
     input.addEventListener("keypress", function(e){
         if(e.key === "Enter"){
             e.preventDefault();
-            sendMessage();
+            sendTextMessage();
         }
+    });
+
+    // ---- image ----
+    attachBtn.addEventListener("click", function(){
+        if(isSending) return;
+        fileInput.click();
+    });
+
+    fileInput.addEventListener("change", function(){
+        var file = fileInput.files && fileInput.files[0];
+        fileInput.value = ""; // allow picking the same file twice
+        if(!file) return;
+
+        if(!file.type.startsWith("image/")){
+            addMessage("text", "⚠️ Please choose an image file.", "bot");
+            return;
+        }
+        if(file.size > MAX_IMAGE_MB * 1024 * 1024){
+            addMessage("text", "⚠️ That image is larger than " + MAX_IMAGE_MB + "MB. Please choose a smaller one.", "bot");
+            return;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function(){
+            var dataUrl = reader.result;
+            addMessage("image", dataUrl, "user");
+            sendToWebhook({
+                type: "image",
+                image: dataUrl,
+                mimeType: file.type,
+                filename: file.name
+            });
+        };
+        reader.onerror = function(){
+            addMessage("text", "⚠️ Couldn't read that image, please try again.", "bot");
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // ---- voice ----
+    function formatTime(sec){
+        var m = Math.floor(sec / 60);
+        var s = sec % 60;
+        return m + ":" + (s < 10 ? "0" : "") + s;
+    }
+
+    function startRecording(){
+        if(!navigator.mediaDevices || !window.MediaRecorder){
+            addMessage("text", "⚠️ Voice messages aren't supported in this browser.", "bot");
+            return;
+        }
+
+        navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(function(stream){
+            recordedChunks = [];
+            recordCancelled = false;
+
+            var mimeType = MediaRecorder.isTypeSupported("audio/webm")
+                ? "audio/webm"
+                : (MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "");
+
+            mediaRecorder = mimeType
+                ? new MediaRecorder(stream, { mimeType: mimeType })
+                : new MediaRecorder(stream);
+
+            mediaRecorder.addEventListener("dataavailable", function(e){
+                if(e.data && e.data.size > 0) recordedChunks.push(e.data);
+            });
+
+            mediaRecorder.addEventListener("stop", function(){
+                stream.getTracks().forEach(function(t){ t.stop(); });
+
+                if(recordCancelled || recordedChunks.length === 0) return;
+
+                var blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+                var reader = new FileReader();
+                reader.onload = function(){
+                    var dataUrl = reader.result;
+                    addMessage("audio", dataUrl, "user");
+                    sendToWebhook({
+                        type: "voice",
+                        audio: dataUrl,
+                        mimeType: blob.type
+                    });
+                };
+                reader.readAsDataURL(blob);
+            });
+
+            mediaRecorder.start();
+            recordStartTime = Date.now();
+
+            micBtn.classList.add("mai-recording");
+            micBtn.textContent = "⏹";
+            input.style.display = "none";
+            recBar.classList.add("mai-show");
+            recTimer.textContent = "0:00";
+
+            recordIntervalId = setInterval(function(){
+                var elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
+                recTimer.textContent = formatTime(elapsed);
+                if(elapsed >= MAX_RECORD_SECONDS){
+                    stopRecording(false);
+                }
+            }, 250);
+        })
+        .catch(function(err){
+            console.error("Milestones AI mic error:", err);
+            addMessage("text", "⚠️ Microphone access was blocked. Please allow it in your browser settings to send voice messages.", "bot");
+        });
+    }
+
+    function stopRecording(cancelled){
+        recordCancelled = !!cancelled;
+
+        if(recordIntervalId){
+            clearInterval(recordIntervalId);
+            recordIntervalId = null;
+        }
+        if(mediaRecorder && mediaRecorder.state !== "inactive"){
+            mediaRecorder.stop();
+        }
+
+        micBtn.classList.remove("mai-recording");
+        micBtn.textContent = "🎤";
+        input.style.display = "";
+        recBar.classList.remove("mai-show");
+    }
+
+    micBtn.addEventListener("click", function(){
+        if(isSending) return;
+        if(micBtn.classList.contains("mai-recording")){
+            stopRecording(false);
+        } else {
+            startRecording();
+        }
+    });
+
+    recCancel.addEventListener("click", function(){
+        stopRecording(true);
     });
 })();
 </script>
-
 </body>
 </html>
