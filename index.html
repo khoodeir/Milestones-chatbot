@@ -747,11 +747,12 @@
     var WORKING_HOURS = { days: [0,1,2,3,4], start: 9, end: 17 };
 
     // Quick reply chips shown after the welcome message on first open
-    var QUICK_REPLIES = [
-        "I'd like a price quote",
-        "VoIP solutions",
-        "Talk to a human agent"
-    ];
+var QUICK_REPLIES = [
+    "🌐 Our Services",
+    "🛠️ Technical Support",
+    "📍 Branch Locations",
+    "📞 Contact Sales"
+];
 
     var SESSION_KEY = "mai_session_id";
     var HISTORY_KEY = "mai_chat_history";
@@ -1259,7 +1260,11 @@
         }
         if(!hasOpenedBefore){
             hasOpenedBefore = true;
-            addMessage("text", "\u{1F44B} Welcome to Milestones! How can I help you today?", "bot");
+            addMessage(
+    "text",
+    "👋 Welcome to Milestones!\nHow can I help you today?",
+    "bot"
+);
             if(!isWithinWorkingHours()){
                 addMessage("text", "\u{1F550} We're currently outside our working hours. Leave us a message and we'll get back to you as soon as we're back online!", "bot");
             }
