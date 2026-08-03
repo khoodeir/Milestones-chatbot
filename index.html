@@ -39,7 +39,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    overflow:hidden;
+    /* overflow:hidden; */ /* Removed to prevent clipping the unread badge */
 }
 #mai-toggle:hover{
     transform:scale(1.08);
@@ -57,8 +57,8 @@
 
 #mai-badge{
     position:absolute;
-    top:-2px;
-    right:-2px;
+    top:0px;
+    right:0px;
     background:#ef4444;
     color:#fff;
     font-size:11px;
@@ -1261,21 +1261,26 @@ var QUICK_REPLIES = [
             var savedHistory = loadHistory();
 
             if(savedHistory.length > 0){
-                // اليوزر ده زار الشات قبل كده - اعرض المحادثة السابقة بدل رسالة الترحيب
+                // اليوزر ده زار الشات قبل كده - اعرض المحادثة السابقة
                 savedHistory.forEach(function(entry){
                     addMessage(entry.kind || "text", entry.content, entry.type, true);
                 });
-            } else {
-                addMessage(
-    "text",
-    "👋 Welcome to Milestones!\nHow can I help you today?",
-    "bot"
-);
-                if(!isWithinWorkingHours()){
-                    addMessage("text", "\u{1F550} We're currently outside our working hours. Leave us a message and we'll get back to you as soon as we're back online!", "bot");
-                }
-                renderQuickReplies();
             }
+
+            // إظهار الرسالة الترحيبية ورسائل المساعدة دائماً عند فتح الشات لأول مرة في الجلسة
+            // نستخدم skipSave = true حتى لا تتكرر الرسالة الترحيبية في الـ localStorage عند كل ريفريش
+            addMessage(
+                "text",
+                "👋 Welcome to Milestones!\nHow can I help you today?",
+                "bot",
+                true
+            );
+
+            if(!isWithinWorkingHours()){
+                addMessage("text", "🕒 We're currently outside our working hours. Leave us a message and we'll get back to you as soon as we're back online!", "bot", true);
+            }
+
+            renderQuickReplies();
         }
     }
 
