@@ -1260,15 +1260,25 @@ var QUICK_REPLIES = [
         }
         if(!hasOpenedBefore){
             hasOpenedBefore = true;
-            addMessage(
+
+            var savedHistory = loadHistory();
+
+            if(savedHistory.length > 0){
+                // اليوزر ده زار الشات قبل كده - اعرض المحادثة السابقة بدل رسالة الترحيب
+                savedHistory.forEach(function(entry){
+                    addMessage(entry.kind || "text", entry.content, entry.type, true);
+                });
+            } else {
+                addMessage(
     "text",
     "👋 Welcome to Milestones!\nHow can I help you today?",
     "bot"
 );
-            if(!isWithinWorkingHours()){
-                addMessage("text", "\u{1F550} We're currently outside our working hours. Leave us a message and we'll get back to you as soon as we're back online!", "bot");
+                if(!isWithinWorkingHours()){
+                    addMessage("text", "\u{1F550} We're currently outside our working hours. Leave us a message and we'll get back to you as soon as we're back online!", "bot");
+                }
+                renderQuickReplies();
             }
-            renderQuickReplies();
         }
     }
 
