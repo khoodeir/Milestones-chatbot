@@ -207,15 +207,25 @@
     flex:1;
     padding:18px;
     overflow-y:auto;
-    background-color:#ffffff;
-    background-image:var(--mai-logo-url);
-    background-repeat:no-repeat;
-    background-position:center;
-    background-size:70%;
+    background:#ffffff;
     display:flex;
     flex-direction:column;
     gap:3px;
     position:relative;
+}
+
+/* Logo watermark */
+#mai-messages::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:var(--mai-logo-url);
+    background-repeat:no-repeat;
+    background-position:center;
+    background-size:70%;
+    opacity:0.10;
+    pointer-events:none;
+    z-index:0;
 }
 #mai-messages::-webkit-scrollbar{ width:6px; }
 #mai-messages::-webkit-scrollbar-thumb{
