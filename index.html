@@ -207,7 +207,11 @@
     flex:1;
     padding:18px;
     overflow-y:auto;
-    background:transparent; /* كانت #ffffff */
+    background-color:#ffffff;
+    background-image:var(--mai-logo-url);
+    background-repeat:no-repeat;
+    background-position:center;
+    background-size:70%;
     display:flex;
     flex-direction:column;
     gap:3px;
@@ -645,19 +649,6 @@
         max-height:none;
         border-radius:0;
     }
-
-     #mai-box::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background-image:var(--mai-logo-url);
-    background-repeat:no-repeat;
-    background-position:center;
-    background-size:60%;
-    opacity:.15;
-    pointer-events:none;
-    z-index:0;
-}
     #mai-header{
         padding-top:calc(12px + env(safe-area-inset-top));
         padding-left:calc(16px + env(safe-area-inset-left));
