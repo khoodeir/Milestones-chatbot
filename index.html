@@ -710,8 +710,7 @@
     <div id="mai-messages"></div>
 
     <div id="mai-input-row">
-        <input type="file" id="mai-file-input" accept="image/*" hidden>
-        <button class="mai-icon-btn" id="mai-attach" type="button" aria-label="Send an image" title="Send an image"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>
+        
         <button class="mai-icon-btn" id="mai-mic" type="button" aria-label="Record a voice message" title="Record a voice message"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
 
         <input id="mai-message" autocomplete="off" placeholder="Aa">
@@ -781,8 +780,6 @@ var QUICK_REPLIES = [
     var input     = document.getElementById("mai-message");
     var sendBtn   = document.getElementById("mai-send");
     var badge     = document.getElementById("mai-badge");
-    var attachBtn = document.getElementById("mai-attach");
-    var fileInput = document.getElementById("mai-file-input");
     var micBtn    = document.getElementById("mai-mic");
     var recBar    = document.getElementById("mai-recording-bar");
     var recTimer  = document.getElementById("mai-rec-timer");
@@ -1302,7 +1299,6 @@ var QUICK_REPLIES = [
         isSending = state;
         sendBtn.disabled = state;
         input.disabled = state;
-        attachBtn.disabled = state;
         micBtn.disabled = state;
     }
 
@@ -1388,43 +1384,6 @@ var QUICK_REPLIES = [
             e.preventDefault();
             sendTextMessage();
         }
-    });
-
-    // ---- image ----
-    attachBtn.addEventListener("click", function(){
-        if(isSending) return;
-        fileInput.click();
-    });
-
-    fileInput.addEventListener("change", function(){
-        var file = fileInput.files && fileInput.files[0];
-        fileInput.value = ""; // allow picking the same file twice
-        if(!file) return;
-
-        if(!file.type.startsWith("image/")){
-            addMessage("text", "\u26A0\uFE0F Please choose an image file.", "bot");
-            return;
-        }
-        if(file.size > MAX_IMAGE_MB * 1024 * 1024){
-            addMessage("text", "\u26A0\uFE0F That image is larger than " + MAX_IMAGE_MB + "MB. Please choose a smaller one.", "bot");
-            return;
-        }
-
-        var reader = new FileReader();
-        reader.onload = function(){
-            var dataUrl = reader.result;
-            addMessage("image", dataUrl, "user");
-            sendToWebhook({
-                type: "image",
-                image: dataUrl,
-                mimeType: file.type,
-                filename: file.name
-            });
-        };
-        reader.onerror = function(){
-            addMessage("text", "\u26A0\uFE0F Couldn't read that image, please try again.", "bot");
-        };
-        reader.readAsDataURL(file);
     });
 
     // ---- voice ----
