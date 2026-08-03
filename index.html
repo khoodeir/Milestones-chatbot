@@ -203,17 +203,15 @@
     gap:3px;
     position:relative;
 }
-#mai-messages::before{
-    content:"";
-    position:absolute;
-    inset:0;
-    background-image:var(--mai-logo-url);
-    background-repeat:no-repeat;
-    background-position:center;
-    background-size:70%;
-    opacity:.25; /* Increased opacity further for better visibility */
-    pointer-events:none;
-    z-index:0;
+#mai-messages{
+    flex:1;
+    padding:18px;
+    overflow-y:auto;
+    background:transparent; /* كانت #ffffff */
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    position:relative;
 }
 #mai-messages::-webkit-scrollbar{ width:6px; }
 #mai-messages::-webkit-scrollbar-thumb{
@@ -647,6 +645,19 @@
         max-height:none;
         border-radius:0;
     }
+
+     #mai-box::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background-image:var(--mai-logo-url);
+    background-repeat:no-repeat;
+    background-position:center;
+    background-size:60%;
+    opacity:.15;
+    pointer-events:none;
+    z-index:0;
+}
     #mai-header{
         padding-top:calc(12px + env(safe-area-inset-top));
         padding-left:calc(16px + env(safe-area-inset-left));
