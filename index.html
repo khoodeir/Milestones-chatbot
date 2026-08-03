@@ -1319,12 +1319,34 @@ var QUICK_REPLIES = [
             body: JSON.stringify(payload)
         })
         .then(function(res){
-            if(!res.ok) throw new Error("HTTP " + res.status);
-            return res.text();
-        })
-        .then(function(reply){
-            hideTyping();
-            addMessage("text", reply || "..", "bot");
+    if(!res.ok) throw new Error("HTTP " + res.status);
+
+    var contentType = res.headers.get("content-type") || "";
+
+    if(contentType.startsWith("audio/")){
+        return res.blob().then(function(blob){
+            return {
+                type: "audio",
+                data: URL.createObjectURL(blob)
+            };
+        });
+    }
+
+    return res.text().then(function(text){
+        return {
+            type: "text",
+            data: text
+        };
+    });
+})
+.then(function(reply){
+    hideTyping();
+
+    if(reply.type === "audio"){
+        addMessage("audio", reply.data, "bot");
+    } else {
+        addMessage("text", reply.data || ".", "bot");
+    }
             if(!box.classList.contains("mai-open")){
                 bumpUnread();
                 playNotifySound();
