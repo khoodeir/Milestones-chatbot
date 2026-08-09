@@ -32,9 +32,9 @@
     width:52px;
     height:52px;
     border:none;
-    border-radius:16px;
+    border-radius:50%;
     background:#ffffff;
-    padding:8px;
+    padding:6px;
     cursor:pointer;
     box-shadow:
         0 0 0 3px rgba(255,255,255,.9),
@@ -59,7 +59,7 @@
 #mai-toggle img{
     width:100%;
     height:100%;
-    border-radius:8px;
+    border-radius:0;
     object-fit:contain;
     object-position:center;
     display:block;
@@ -81,8 +81,8 @@
 }
 #mai-badge{
     position:absolute;
-    top:-4px;
-    right:-4px;
+    top:-2px;
+    right:-2px;
     background:#ef4444;
     color:#fff;
     font-size:11px;
@@ -421,7 +421,7 @@
 /* ---------------- input row (Messenger style pill) ---------------- */
 #mai-input-row{
     display:flex;
-    align-items:flex-end;
+    align-items:center;
     padding:12px;
     background:#fff;
     gap:8px;
@@ -431,15 +431,15 @@
 #mai-message{
     flex:1;
     min-width:0;
-    padding:10px 16px;
-    border-radius:18px;
-    border:1.5px solid #dfe1e6;
+    padding:9px 18px;
+    border-radius:20px;
+    border:1.5px solid var(--mai-primary);
     background:#ffffff;
     font-size:14.5px;
     outline:none;
     font-family:inherit;
     color:var(--mai-text);
-    box-shadow:0 1px 2px rgba(41,35,95,.06);
+    box-shadow:0 1px 3px rgba(41,35,95,.10);
     transition:border-color .2s ease, background .2s ease, box-shadow .2s ease;
     resize:none;
     overflow-y:auto;
@@ -447,11 +447,11 @@
     line-height:1.4;
     display:block;
 }
-#mai-message::placeholder{ color:#8a8d91; }
+#mai-message::placeholder{ color:#9a9da6; }
 #mai-message:focus{
     background:#ffffff;
-    border-color:var(--mai-primary);
-    box-shadow:0 0 0 3px rgba(41,35,95,.12);
+    border-color:var(--mai-primary-dark);
+    box-shadow:0 0 0 3px rgba(41,35,95,.14);
 }
 #mai-message:disabled{ background:#f5f5f5; cursor:not-allowed; }
 
@@ -474,22 +474,23 @@
 .mai-icon-btn:disabled{ opacity:.5; cursor:not-allowed; }
 
 #mai-send{
-    width:38px;
-    height:38px;
+    width:40px;
+    height:40px;
     flex-shrink:0;
     border:none;
     border-radius:50%;
-    background:none;
-    color:var(--mai-primary);
-    font-size:22px;
+    background:var(--mai-primary);
+    color:#ffffff;
+    font-size:18px;
     cursor:pointer;
-    transition:transform .2s, opacity .2s;
+    box-shadow:0 2px 6px rgba(41,35,95,.25);
+    transition:transform .2s, opacity .2s, background .2s;
     display:flex;
     align-items:center;
     justify-content:center;
 }
-#mai-send:hover:not(:disabled){ transform:scale(1.1); }
-#mai-send:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+#mai-send:hover:not(:disabled){ transform:scale(1.08); background:var(--mai-primary-dark); }
+#mai-send:disabled{ opacity:.5; cursor:not-allowed; transform:none; background:var(--mai-primary); }
 
 /* ---------------- proactive teaser bubble (near the launcher) ---------------- */
 #mai-teaser{
