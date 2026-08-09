@@ -29,12 +29,12 @@
     position:fixed;
     right:25px;
     bottom:25px;
-    width:64px;
-    height:64px;
+    width:52px;
+    height:52px;
     border:none;
-    border-radius:50%;
+    border-radius:16px;
     background:#ffffff;
-    padding:5px;
+    padding:8px;
     cursor:pointer;
     box-shadow:
         0 0 0 3px rgba(255,255,255,.9),
@@ -51,7 +51,7 @@
     transform:scale(1.08);
     box-shadow:
         0 0 0 3px rgba(255,255,255,.95),
-        0 0 0 8px rgba(190,215,59,.5),
+        0 0 0 7px rgba(190,215,59,.5),
         0 14px 34px rgba(41,35,95,.55);
 }
 #mai-toggle:active{ transform:scale(.96); }
@@ -59,8 +59,8 @@
 #mai-toggle img{
     width:100%;
     height:100%;
-    border-radius:50%;
-    object-fit:cover;
+    border-radius:8px;
+    object-fit:contain;
     object-position:center;
     display:block;
 }
@@ -75,14 +75,14 @@
     50%{
         box-shadow:
             0 0 0 3px rgba(255,255,255,.9),
-            0 0 0 9px rgba(190,215,59,.55),
+            0 0 0 8px rgba(190,215,59,.55),
             0 12px 32px rgba(41,35,95,.5);
     }
 }
 #mai-badge{
     position:absolute;
-    top:0px;
-    right:0px;
+    top:-4px;
+    right:-4px;
     background:#ef4444;
     color:#fff;
     font-size:11px;
@@ -134,9 +134,9 @@
     border-bottom:1px solid #e4e6eb;
 }
 .mai-logo{
-    width:40px;
-    height:40px;
-    border-radius:50%;
+    width:42px;
+    height:42px;
+    border-radius:10px;
     background:#fff;
     border:1px solid #e4e6eb;
     display:flex;
@@ -149,7 +149,7 @@
     width:100%;
     height:100%;
     object-fit:contain;
-    padding:3px;
+    padding:4px;
 }
 .mai-header-title{
     display:flex;
@@ -422,9 +422,9 @@
 #mai-input-row{
     display:flex;
     align-items:flex-end;
-    padding:10px 12px;
+    padding:12px;
     background:#fff;
-    gap:6px;
+    gap:8px;
     border-top:1px solid #e4e6eb;
     flex-shrink:0;
 }
@@ -432,21 +432,27 @@
     flex:1;
     min-width:0;
     padding:10px 16px;
-    border-radius:20px;
-    border:none;
-    background:#f0f2f5;
+    border-radius:18px;
+    border:1.5px solid #dfe1e6;
+    background:#ffffff;
     font-size:14.5px;
     outline:none;
     font-family:inherit;
     color:var(--mai-text);
-    transition:background .2s, border-radius .1s;
+    box-shadow:0 1px 2px rgba(41,35,95,.06);
+    transition:border-color .2s ease, background .2s ease, box-shadow .2s ease;
     resize:none;
-    overflow-y:hidden;
+    overflow-y:auto;
     max-height:120px;
     line-height:1.4;
     display:block;
 }
-#mai-message:focus{ background:#e9ebef; }
+#mai-message::placeholder{ color:#8a8d91; }
+#mai-message:focus{
+    background:#ffffff;
+    border-color:var(--mai-primary);
+    box-shadow:0 0 0 3px rgba(41,35,95,.12);
+}
 #mai-message:disabled{ background:#f5f5f5; cursor:not-allowed; }
 
 .mai-icon-btn{
