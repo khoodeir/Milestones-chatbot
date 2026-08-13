@@ -899,12 +899,16 @@ var QUICK_REPLIES = [
             imgWrap.addEventListener("click", function(){ openLightbox(content); });
 
             div.appendChild(imgWrap);
-        } else {
-            var textDiv = document.createElement("div");
-            textDiv.innerHTML = escapeHtml(content).replace(/\n/g, "<br>");
-            div.appendChild(textDiv);
-        }
-
+       } else {
+    var textDiv = document.createElement("div");
+    var escaped = escapeHtml(content);
+    // يلف أي رقم تليفون (أو أي رقم طويل) بـ dir="ltr" عشان يفضل ثابت
+    // جوه النص العربي مهما كان شكل الرقم اللي راجع من n8n
+    escaped = escaped.replace(/(\+?\d[\d\s\-]{6,}\d)/g,
+        '<span dir="ltr" style="unicode-bidi:isolate;display:inline-block">$1</span>');
+    textDiv.innerHTML = escaped.replace(/\n/g, "<br>");
+    div.appendChild(textDiv);
+}
         var timeLabel = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         var timeDiv = document.createElement("div");
         timeDiv.className = "mai-time";
