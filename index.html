@@ -91,12 +91,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    animation: mai-breathe 3.2s ease-in-out infinite;
 }
-#mai-toggle:hover{ transform: scale(1.06); box-shadow: 0 0 0 3px #fff, 0 16px 40px rgba(23,15,60,.22); }
-#mai-toggle:active{ transform: scale(.96); }
+#mai-toggle:hover{ transform: scale(1.06); box-shadow: 0 0 0 3px #fff, 0 16px 40px rgba(23,15,60,.22); animation-play-state: paused; }
+#mai-toggle:active{ transform: scale(.96); animation-play-state: paused; }
 #mai-toggle img{ width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; }
 #mai-toggle.mai-has-unread{ animation: mai-pulse 1.8s var(--mai-ease) infinite; }
 
+@keyframes mai-breathe{
+    0%, 100%{ transform: scale(1); }
+    50%{ transform: scale(1.05); }
+}
 @keyframes mai-pulse{
     0%, 100%{ box-shadow: 0 0 0 3px #fff, 0 0 0 0 rgba(190,215,59,.55), var(--mai-shadow-md); }
     50%{      box-shadow: 0 0 0 3px #fff, 0 0 0 9px rgba(190,215,59,0), var(--mai-shadow-md); }
@@ -136,10 +141,17 @@
     gap: 8px;
     cursor: pointer;
     z-index: 2147482999;
-    animation: mai-rise .25s var(--mai-ease);
 }
-#mai-teaser.mai-show{ display: flex; }
+#mai-teaser.mai-show{ display: flex; animation: mai-teaser-in .45s cubic-bezier(.34, 1.56, .64, 1), mai-teaser-float 2.4s ease-in-out .45s infinite; }
 @keyframes mai-rise{ from{ opacity: 0; transform: translateY(8px); } to{ opacity: 1; transform: none; } }
+@keyframes mai-teaser-in{
+    from{ opacity: 0; transform: translateY(14px) scale(.9); }
+    to{ opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes mai-teaser-float{
+    0%, 100%{ transform: translateY(0); }
+    50%{ transform: translateY(-4px); }
+}
 #mai-teaser-close{
     background: none; border: none; color: var(--mai-muted);
     font-size: 13px; cursor: pointer; padding: 3px; flex-shrink: 0; line-height: 1;
@@ -200,8 +212,18 @@
 .mai-status::before{
     content: ""; width: 7px; height: 7px; border-radius: 50%;
     background: var(--mai-online); flex-shrink: 0;
+    animation: mai-dot-pulse 2s ease-in-out infinite;
 }
-.mai-status.mai-away::before{ background: rgba(255,255,255,.55); }
+.mai-status.mai-away::before{ background: rgba(255,255,255,.55); animation: mai-dot-pulse-away 2s ease-in-out infinite; }
+
+@keyframes mai-dot-pulse{
+    0%, 100%{ box-shadow: 0 0 0 0 rgba(49,196,110,.5); }
+    50%{ box-shadow: 0 0 0 4px rgba(49,196,110,0); }
+}
+@keyframes mai-dot-pulse-away{
+    0%, 100%{ box-shadow: 0 0 0 0 rgba(255,255,255,.35); }
+    50%{ box-shadow: 0 0 0 4px rgba(255,255,255,0); }
+}
 
 .mai-header-btn{
     width: 34px; height: 34px; flex-shrink: 0;
@@ -295,11 +317,11 @@
     gap: 7px;
     max-width: 100%;
     position: relative;
-    margin: 2px 0;
+    margin: 10px 0;
 }
 .mai-row-user{ justify-content: flex-end; }
 .mai-row-bot{ justify-content: flex-start; }
-.mai-row.mai-grouped{ margin-top: -6px; }
+.mai-row.mai-grouped{ margin-top: 4px; }
 
 .mai-avatar{
     width: 24px; height: 24px; border-radius: 50%;
@@ -688,7 +710,7 @@
             statusEl.textContent = "Active now";
             statusEl.classList.remove("mai-away");
         } else {
-            statusEl.textContent = "Away — we'll reply soon";
+            statusEl.textContent = "Leave us a message";
             statusEl.classList.add("mai-away");
         }
     }
@@ -800,11 +822,7 @@
         row.appendChild(bubble);
         messages.appendChild(row);
 
-        if(isNearBottom() || type === "user"){
-            scrollToBottom(!opts.skipDayDivider === false);
-        } else if(type === "bot"){
-            scrollBtn.classList.add("mai-show", "mai-has-new");
-        }
+        scrollToBottom(true);
 
         if(!opts.skipSave){
             saveHistoryEntry({
@@ -846,7 +864,7 @@
         bubble.innerHTML = "<span></span><span></span><span></span>";
         row.appendChild(avatar); row.appendChild(bubble);
         messages.appendChild(row);
-        if(isNearBottom()) scrollToBottom();
+        scrollToBottom();
     }
     function hideTyping(){
         var el = document.getElementById("mai-typing-row");
@@ -990,20 +1008,19 @@
         if(state.lastFocusedEl) state.lastFocusedEl.focus();
     }
 
-    toggleBtn.addEventListener("click", function(){
+    toggleBtn.addEventListener("click", function(e){
+        e.stopPropagation();
         box.classList.contains("mai-open") ? closeChat() : openChat();
     });
 
     // Click anywhere outside the chat panel (and outside the launcher
-    // button) closes the chat automatically.
+    // button) closes the chat automatically. Clicks inside the panel
+    // never close it.
     document.addEventListener("click", function(e){
         if(!box.classList.contains("mai-open")) return;
-        if(box.contains(e.target) || toggleBtn.contains(e.target)) return;
+        if(box.contains(e.target)) return;
         closeChat();
     });
-    // Prevent the panel's own outside-click listener above from double
-    // firing when a click inside the panel bubbles up (menu handling
-    // below already stops propagation where needed).
 
     document.addEventListener("keydown", function(e){
         if(e.key !== "Escape") return;
@@ -1043,7 +1060,7 @@
         if(state.teaserTimer){ clearTimeout(state.teaserTimer); state.teaserTimer = null; }
     }
     state.teaserTimer = setTimeout(showTeaser, 8000);
-    teaser.addEventListener("click", function(){ hideTeaser(); openChat(); });
+    teaser.addEventListener("click", function(e){ e.stopPropagation(); hideTeaser(); openChat(); });
     teaserClose.addEventListener("click", function(e){ e.stopPropagation(); hideTeaser(); });
 
     /* ======================================================================
