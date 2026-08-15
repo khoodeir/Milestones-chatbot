@@ -578,9 +578,9 @@
        ====================================================================== */
     var WEBHOOK          = "https://students.milestones-tech.com/webhook/Milestones_ChatBot";
     var WHATSAPP_NUMBER  = "201288818012"; // international format, digits only
-    var WORKING_HOURS    = { days: [0, 1, 2, 3, 4], start: 9, end: 17 }; // 0=Sun … 6=Sat, local time
     var QUICK_REPLIES    = ["🌐 Our Services", "📍 Branch Locations", "📞 Contact Sales"];
     var MAX_HISTORY      = 60;
+    var STATUS_CHECK_INTERVAL = 60 * 1000; // how often to re-check the system status
 
     // Path to your logo image. Must be reachable from the page you embed
     // this on (same folder, or update to an absolute/relative path or a
@@ -699,20 +699,41 @@
     /* ======================================================================
        WORKING HOURS / STATUS
        ====================================================================== */
-    function isWithinWorkingHours(){
-        var now = new Date();
-        return WORKING_HOURS.days.indexOf(now.getDay()) !== -1 &&
-               now.getHours() >= WORKING_HOURS.start && now.getHours() < WORKING_HOURS.end;
-    }
-
-    function refreshStatusIndicator(){
-        if(isWithinWorkingHours()){
+    function setStatus(isOnline){
+        if(isOnline){
             statusEl.textContent = "Active now";
             statusEl.classList.remove("mai-away");
         } else {
             statusEl.textContent = "Leave us a message";
             statusEl.classList.add("mai-away");
         }
+    }
+
+    // Pings the backend without waiting for/reading a real response body —
+    // mode: "no-cors" means the fetch promise resolves as long as the
+    // request reached the server (whatever status code it replies with),
+    // and rejects only on an actual network/connection failure. That's
+    // enough to tell "system is up" from "system is down".
+    function checkSystemStatus(){
+        if(!navigator.onLine){ setStatus(false); return; }
+
+        var hasAbort = typeof AbortController !== "undefined";
+        var controller = hasAbort ? new AbortController() : null;
+        var timeoutId = setTimeout(function(){ if(controller) controller.abort(); }, 6000);
+
+        fetch(WEBHOOK, {
+            method: "HEAD",
+            mode: "no-cors",
+            signal: controller ? controller.signal : undefined
+        })
+        .then(function(){
+            clearTimeout(timeoutId);
+            setStatus(true);
+        })
+        .catch(function(){
+            clearTimeout(timeoutId);
+            setStatus(false);
+        });
     }
 
     /* ======================================================================
@@ -1082,8 +1103,8 @@
     function refreshConnectionBanner(){
         offlineBanner.classList.toggle("mai-show", !navigator.onLine);
     }
-    window.addEventListener("online", refreshConnectionBanner);
-    window.addEventListener("offline", refreshConnectionBanner);
+    window.addEventListener("online", function(){ refreshConnectionBanner(); checkSystemStatus(); });
+    window.addEventListener("offline", function(){ refreshConnectionBanner(); setStatus(false); });
 
     /* ======================================================================
        MOBILE KEYBOARD HANDLING (visualViewport keeps the input above the
@@ -1109,10 +1130,10 @@
         document.getElementById("mai-header-logo").src = LOGO_URL;
         watermark.style.backgroundImage = "url('" + LOGO_URL + "')";
 
-        refreshStatusIndicator();
         refreshConnectionBanner();
         refreshSendIcon();
-        setInterval(refreshStatusIndicator, 60 * 1000);
+        checkSystemStatus();
+        setInterval(checkSystemStatus, STATUS_CHECK_INTERVAL);
     }
 
     init();
