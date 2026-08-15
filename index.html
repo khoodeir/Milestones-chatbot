@@ -901,9 +901,9 @@
             chip.className = "mai-chip";
             chip.textContent = label;
             chip.addEventListener("click", function(){
-                wrap.remove();
                 input.value = label;
                 sendMessage();
+                setTimeout(function(){ wrap.remove(); }, 0);
             });
             wrap.appendChild(chip);
         });
