@@ -5,9 +5,9 @@
   HOW TO USE
   1. Paste everything between <!--EMBED START--> and <!--EMBED END--> into
      your site, right before the closing </body> tag.
-  2. In the <script> config block near the top, replace LOGO_URL's placeholder
-     with your logo's base64 string (see the note next to it — you only need
-     to paste it in ONE place now, instead of four).
+  2. Make sure the logo file "milestones_group_logo.png" is uploaded to the
+     same path/folder as the page you're embedding this on (or update the
+     LOGO_URL variable below to the correct relative/absolute path).
   3. Double-check WEBHOOK and WHATSAPP_NUMBER are correct for production.
 
   WHAT CHANGED VS. THE PREVIOUS VERSION
@@ -15,11 +15,14 @@
     status menu, softer bubble grouping, a proper empty/offline state.
   - Mobile: keyboard-aware layout (visualViewport), no more jumpy input,
     safe-area handling throughout, larger touch targets.
-  - New: image upload with captions, delivery ticks + tap-to-retry on
-    failed sends, a scroll-to-bottom button, an offline banner, a
-    "Clear conversation" action, full keyboard support (Esc closes chat
-    and the lightbox, focus is trapped and restored correctly).
-  - Code: the giant logo string now lives in ONE place, CSS is organized
+  - New: delivery ticks + tap-to-retry on failed sends, a scroll-to-bottom
+    button, an offline banner, a "Clear conversation" action, full
+    keyboard support (Esc closes the chat, focus is trapped and restored
+    correctly).
+  - The chat has no visible close (X) button — click anywhere outside the
+    panel, click the launcher again, or press Esc to close it.
+  - Image sending has been removed — text messages only.
+  - Code: the logo reference now lives in ONE place, CSS is organized
     into labeled sections with a consistent token scale, and the JS is
     split into clearly commented modules instead of one long block.
   ============================================================================
@@ -337,32 +340,6 @@
 .mai-meta svg{ width: 12px; height: 12px; }
 .mai-meta.mai-retry{ color: var(--mai-danger); opacity: 1; text-decoration: underline; cursor: pointer; }
 
-/* Image bubble */
-.mai-image-wrap{
-    position: relative;
-    border-radius: 14px;
-    overflow: hidden;
-    cursor: pointer;
-    line-height: 0;
-    box-shadow: var(--mai-shadow-sm);
-}
-.mai-image-wrap img{
-    display: block; width: 100%;
-    max-width: 220px; max-height: 250px;
-    object-fit: cover;
-    transition: transform .35s var(--mai-ease);
-}
-.mai-image-wrap:hover img{ transform: scale(1.04); }
-.mai-image-wrap .mai-zoom{
-    position: absolute; bottom: 8px; right: 8px;
-    width: 28px; height: 28px; border-radius: 50%;
-    background: rgba(255,255,255,.92); color: var(--mai-primary);
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity .15s;
-}
-.mai-image-wrap:hover .mai-zoom{ opacity: 1; }
-.mai-image-caption{ margin-top: 6px; }
-
 /* Typing indicator */
 .mai-typing{
     background: var(--mai-bot-bubble);
@@ -424,28 +401,7 @@
 #mai-scroll-btn.mai-has-new .mai-dot{ display: block; }
 
 /* ==========================================================================
-   7. IMAGE STAGING (attached before send)
-   ========================================================================== */
-#mai-staged-image{
-    display: none;
-    align-items: center; gap: 10px;
-    padding: 8px 14px;
-    border-top: 1px solid var(--mai-border);
-    flex-shrink: 0;
-}
-#mai-staged-image.mai-show{ display: flex; }
-#mai-staged-image img{
-    width: 44px; height: 44px; border-radius: 10px; object-fit: cover;
-    border: 1px solid var(--mai-border);
-}
-#mai-staged-image .mai-staged-label{ font-size: 12.5px; color: var(--mai-muted); flex: 1; }
-#mai-staged-remove{
-    background: none; border: none; color: var(--mai-muted);
-    cursor: pointer; padding: 4px; flex-shrink: 0;
-}
-
-/* ==========================================================================
-   8. INPUT ROW
+   7. INPUT ROW
    ========================================================================== */
 #mai-input-row{
     display: flex; align-items: flex-end; gap: 6px;
@@ -500,35 +456,7 @@
 #mai-send:disabled{ opacity: .5; cursor: not-allowed; }
 
 /* ==========================================================================
-   9. LIGHTBOX
-   ========================================================================== */
-#mai-lightbox{
-    position: fixed; inset: 0;
-    background: rgba(10,8,20,.9);
-    display: none; align-items: center; justify-content: center;
-    z-index: 2147483200;
-    padding: 30px;
-}
-#mai-lightbox.mai-open{ display: flex; animation: mai-fade-in .15s; }
-@keyframes mai-fade-in{ from{ opacity: 0; } to{ opacity: 1; } }
-#mai-lightbox img{
-    max-width: 90vw; max-height: 85vh;
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.5);
-}
-.mai-lightbox-btn{
-    position: absolute; width: 42px; height: 42px; border-radius: 50%;
-    border: none; background: rgba(255,255,255,.12); color: #fff;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: background .15s;
-}
-.mai-lightbox-btn svg{ width: 18px; height: 18px; }
-.mai-lightbox-btn:hover{ background: rgba(255,255,255,.25); }
-#mai-lightbox-close{ top: 18px; right: 18px; }
-#mai-lightbox-download{ top: 18px; right: 70px; }
-
-/* ==========================================================================
-   10. MOBILE
+   8. MOBILE
    ========================================================================== */
 @media (max-width: 640px){
     #mai-box{
@@ -593,10 +521,6 @@
                     </button>
                 </div>
             </div>
-
-            <button class="mai-header-btn" id="mai-close" aria-label="Close chat">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-            </button>
         </div>
 
         <div id="mai-offline-banner" role="status">
@@ -613,34 +537,12 @@
             </button>
         </div>
 
-        <div id="mai-staged-image">
-            <img id="mai-staged-thumb" src="" alt="">
-            <span class="mai-staged-label">Image ready to send</span>
-            <button id="mai-staged-remove" aria-label="Remove image">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
-            </button>
-        </div>
-
         <div id="mai-input-row">
-            <button class="mai-icon-btn" id="mai-upload-btn" aria-label="Attach an image">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-            </button>
-            <input type="file" id="mai-file-input" accept="image/*" hidden>
             <textarea id="mai-message" autocomplete="off" placeholder="Write a message…" rows="1"></textarea>
             <button id="mai-send" aria-label="Send message">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
         </div>
-    </div>
-
-    <div id="mai-lightbox" role="dialog" aria-modal="true" aria-label="Image preview">
-        <button class="mai-lightbox-btn" id="mai-lightbox-close" aria-label="Close preview">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-        </button>
-        <button class="mai-lightbox-btn" id="mai-lightbox-download" aria-label="Download image">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M6 11l6 6 6-6M5 21h14"/></svg>
-        </button>
-        <img id="mai-lightbox-img" src="" alt="Full size image">
     </div>
 
 </div>
@@ -656,12 +558,13 @@
     var WHATSAPP_NUMBER  = "201288818012"; // international format, digits only
     var WORKING_HOURS    = { days: [0, 1, 2, 3, 4], start: 9, end: 17 }; // 0=Sun … 6=Sat, local time
     var QUICK_REPLIES    = ["🌐 Our Services", "📍 Branch Locations", "📞 Contact Sales"];
-    var MAX_IMAGE_MB     = 5;
     var MAX_HISTORY      = 60;
 
-    // Paste your logo's "data:image/png;base64,...." string below.
-    // It now only needs to live in this ONE place — it's reused for the
-    // launcher icon, the header avatar, and the chat-background watermark.
+    // Path to your logo image. Must be reachable from the page you embed
+    // this on (same folder, or update to an absolute/relative path or a
+    // full URL like "https://yourdomain.com/assets/logo.png").
+    // It's used for: the launcher icon, the header avatar, and the
+    // chat-background watermark.
     var LOGO_URL = "milestones_group_logo.png";
 
     var SESSION_KEY = "mai_session_id";
@@ -674,7 +577,6 @@
     var toggleBtn      = document.getElementById("mai-toggle");
     var badge          = document.getElementById("mai-badge");
     var box            = document.getElementById("mai-box");
-    var closeBtn       = document.getElementById("mai-close");
     var messagesWrap   = document.getElementById("mai-messages-wrap");
     var messages       = document.getElementById("mai-messages");
     var watermark      = document.getElementById("mai-watermark");
@@ -689,19 +591,8 @@
     var clearChatBtn   = document.getElementById("mai-clear-chat");
     var whatsappBtn    = document.getElementById("mai-whatsapp");
 
-    var uploadBtn      = document.getElementById("mai-upload-btn");
-    var fileInput      = document.getElementById("mai-file-input");
-    var stagedWrap     = document.getElementById("mai-staged-image");
-    var stagedThumb    = document.getElementById("mai-staged-thumb");
-    var stagedRemove   = document.getElementById("mai-staged-remove");
-
     var teaser         = document.getElementById("mai-teaser");
     var teaserClose     = document.getElementById("mai-teaser-close");
-
-    var lightbox         = document.getElementById("mai-lightbox");
-    var lightboxImg       = document.getElementById("mai-lightbox-img");
-    var lightboxClose     = document.getElementById("mai-lightbox-close");
-    var lightboxDownload  = document.getElementById("mai-lightbox-download");
 
     /* ======================================================================
        STATE
@@ -711,7 +602,6 @@
         isSending: false,
         unreadCount: 0,
         lastFocusedEl: null,
-        stagedImageDataUrl: null,
         lastRenderedDay: null,
         teaserTimer: null
     };
@@ -874,7 +764,7 @@
         return last.classList.contains("mai-row-user") ? "user" : "bot";
     }
 
-    // Renders one message. kind: "text" | "image". type: "user" | "bot".
+    // Renders one text message. type: "user" | "bot".
     // Returns the row element so callers can update delivery status later.
     function addMessage(kind, content, type, opts){
         opts = opts || {};
@@ -897,31 +787,10 @@
         bubble.className = "mai-msg " + (type === "user" ? "mai-user" : "mai-bot");
         bubble.dir = "auto";
 
-        if(kind === "image"){
-            var wrap = document.createElement("div");
-            wrap.className = "mai-image-wrap";
-            var img = document.createElement("img");
-            img.src = content;
-            img.alt = opts.caption ? opts.caption : "Sent image";
-            var zoom = document.createElement("span");
-            zoom.className = "mai-zoom";
-            zoom.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>';
-            wrap.appendChild(img);
-            wrap.appendChild(zoom);
-            wrap.addEventListener("click", function(){ openLightbox(content); });
-            bubble.appendChild(wrap);
-            if(opts.caption){
-                var cap = document.createElement("div");
-                cap.className = "mai-image-caption";
-                cap.textContent = opts.caption;
-                bubble.appendChild(cap);
-            }
-        } else {
-            var textDiv = document.createElement("div");
-            var html = linkifyPhones(escapeHtml(content)).replace(/\n/g, "<br>");
-            textDiv.innerHTML = html;
-            bubble.appendChild(textDiv);
-        }
+        var textDiv = document.createElement("div");
+        var html = linkifyPhones(escapeHtml(content)).replace(/\n/g, "<br>");
+        textDiv.innerHTML = html;
+        bubble.appendChild(textDiv);
 
         var meta = document.createElement("div");
         meta.className = "mai-meta";
@@ -939,8 +808,8 @@
 
         if(!opts.skipSave){
             saveHistoryEntry({
-                kind: kind === "image" ? "text" : "text", // images aren't persisted in full to save storage
-                content: kind === "image" ? "🖼️ Image" + (opts.caption ? ": " + opts.caption : "") : content,
+                kind: "text",
+                content: content,
                 type: type,
                 date: now.toISOString()
             });
@@ -1010,11 +879,10 @@
         state.isSending = isSending;
         sendBtn.disabled = isSending;
         input.disabled = isSending;
-        uploadBtn.disabled = isSending;
     }
 
     function refreshSendIcon(){
-        var hasContent = input.value.trim().length > 0 || state.stagedImageDataUrl;
+        var hasContent = input.value.trim().length > 0;
         sendBtn.innerHTML = hasContent
             ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>'
             : '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21h2a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1H2v11zM22.16 10.76a2 2 0 0 0-1.5-.76H15l.85-4.3a2.87 2.87 0 0 0-.78-2.57A2.83 2.83 0 0 0 13 2c-.42 0-.83.15-1.15.42a2 2 0 0 0-.55.78L9 8.35V19a2 2 0 0 0 2 2h7.24a2 2 0 0 0 1.94-1.51l2-8a2 2 0 0 0-.02-1z"/></svg>';
@@ -1061,96 +929,21 @@
     function sendMessage(){
         if(state.isSending) return;
         var text = input.value.trim();
-        var image = state.stagedImageDataUrl;
 
-        if(!text && !image){
+        if(!text){
             // Empty send = thumbs-up, Messenger-style default action
             var thumbHandle = addMessage("text", "👍", "user");
             sendToWebhook({ type: "text", message: "👍" }, thumbHandle);
             return;
         }
 
-        var handle;
-        if(image){
-            handle = addMessage("image", image, "user", { caption: text || null });
-            sendToWebhook({ type: "image", image: image, message: text || "", filename: state.stagedFileName || "image" }, handle);
-            clearStagedImage();
-        } else {
-            handle = addMessage("text", text, "user");
-            sendToWebhook({ type: "text", message: text }, handle);
-        }
+        var handle = addMessage("text", text, "user");
+        sendToWebhook({ type: "text", message: text }, handle);
 
         input.value = "";
         autoResizeInput();
         refreshSendIcon();
     }
-
-    /* ======================================================================
-       IMAGE ATTACHMENTS
-       ====================================================================== */
-    function clearStagedImage(){
-        state.stagedImageDataUrl = null;
-        state.stagedFileName = null;
-        stagedThumb.src = "";
-        stagedWrap.classList.remove("mai-show");
-        fileInput.value = "";
-        refreshSendIcon();
-    }
-
-    function stageImage(file){
-        if(!file) return;
-        if(!/^image\//.test(file.type)){
-            addMessage("text", "⚠️ That file isn't an image. Please attach a JPG, PNG, or similar.", "bot", { skipSave: true });
-            return;
-        }
-        if(file.size > MAX_IMAGE_MB * 1024 * 1024){
-            addMessage("text", "⚠️ That image is larger than " + MAX_IMAGE_MB + "MB. Please choose a smaller file.", "bot", { skipSave: true });
-            return;
-        }
-        var reader = new FileReader();
-        reader.onload = function(e){
-            state.stagedImageDataUrl = e.target.result;
-            state.stagedFileName = file.name;
-            stagedThumb.src = e.target.result;
-            stagedWrap.classList.add("mai-show");
-            refreshSendIcon();
-            if(!isMobile()) input.focus();
-        };
-        reader.readAsDataURL(file);
-    }
-
-    uploadBtn.addEventListener("click", function(){ fileInput.click(); });
-    fileInput.addEventListener("change", function(){ stageImage(fileInput.files[0]); });
-    stagedRemove.addEventListener("click", clearStagedImage);
-
-    // Drag & drop an image straight onto the chat window
-    ["dragover", "drop"].forEach(function(evt){
-        box.addEventListener(evt, function(e){ e.preventDefault(); });
-    });
-    box.addEventListener("drop", function(e){
-        if(e.dataTransfer.files && e.dataTransfer.files[0]) stageImage(e.dataTransfer.files[0]);
-    });
-
-    /* ======================================================================
-       LIGHTBOX
-       ====================================================================== */
-    function openLightbox(src){
-        lightboxImg.src = src;
-        lightbox.classList.add("mai-open");
-    }
-    function closeLightbox(){
-        lightbox.classList.remove("mai-open");
-        lightboxImg.src = "";
-    }
-    lightboxClose.addEventListener("click", closeLightbox);
-    lightbox.addEventListener("click", function(e){ if(e.target === lightbox) closeLightbox(); });
-    lightboxDownload.addEventListener("click", function(){
-        if(!lightboxImg.src) return;
-        var a = document.createElement("a");
-        a.href = lightboxImg.src;
-        a.download = "image.png";
-        document.body.appendChild(a); a.click(); a.remove();
-    });
 
     /* ======================================================================
        PANEL OPEN / CLOSE
@@ -1162,10 +955,7 @@
                 addMessage("text", entry.content, entry.type, { date: new Date(entry.date), skipSave: true });
             });
         }
-        addMessage("text", "👋 Welcome to Milestones!\nHow can I help you today?", "bot", { skipSave: true });
-        if(!isWithinWorkingHours()){
-            addMessage("text", "🕒 We're currently outside our working hours. Leave a message and we'll reply as soon as we're back online!", "bot", { skipSave: true });
-        }
+        addMessage("text", "👋 Hi there! Welcome to Milestones.\nHow can we help you today?", "bot", { skipSave: true });
         renderQuickReplies();
     }
 
@@ -1197,19 +987,27 @@
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
         menu.classList.remove("mai-open");
-        closeLightbox();
         if(state.lastFocusedEl) state.lastFocusedEl.focus();
     }
 
     toggleBtn.addEventListener("click", function(){
         box.classList.contains("mai-open") ? closeChat() : openChat();
     });
-    closeBtn.addEventListener("click", closeChat);
+
+    // Click anywhere outside the chat panel (and outside the launcher
+    // button) closes the chat automatically.
+    document.addEventListener("click", function(e){
+        if(!box.classList.contains("mai-open")) return;
+        if(box.contains(e.target) || toggleBtn.contains(e.target)) return;
+        closeChat();
+    });
+    // Prevent the panel's own outside-click listener above from double
+    // firing when a click inside the panel bubbles up (menu handling
+    // below already stops propagation where needed).
 
     document.addEventListener("keydown", function(e){
         if(e.key !== "Escape") return;
-        if(lightbox.classList.contains("mai-open")) closeLightbox();
-        else if(menu.classList.contains("mai-open")) menu.classList.remove("mai-open");
+        if(menu.classList.contains("mai-open")) menu.classList.remove("mai-open");
         else if(box.classList.contains("mai-open")) closeChat();
     });
 
