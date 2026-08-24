@@ -1,34 +1,3 @@
-<!--
-  ============================================================================
-  MILESTONES AI CHAT WIDGET — v2
-  ============================================================================
-  HOW TO USE
-  1. Paste everything between <!--EMBED START--> and <!--EMBED END--> into
-     your site, right before the closing </body> tag.
-  2. Make sure the logo file "milestones_group_logo.png" is uploaded to the
-     same path/folder as the page you're embedding this on (or update the
-     LOGO_URL variable below to the correct relative/absolute path).
-  3. Double-check WEBHOOK and WHATSAPP_NUMBER are correct for production.
-
-  WHAT CHANGED VS. THE PREVIOUS VERSION
-  - Visual polish: refined shadows/spacing/motion, tidier header with a
-    status menu, softer bubble grouping, a proper empty/offline state.
-  - Mobile: keyboard-aware layout (visualViewport), no more jumpy input,
-    safe-area handling throughout, larger touch targets.
-  - New: delivery ticks + tap-to-retry on failed sends, a scroll-to-bottom
-    button, an offline banner, a "Clear conversation" action, full
-    keyboard support (Esc closes the chat, focus is trapped and restored
-    correctly).
-  - The chat has no visible close (X) button — click anywhere outside the
-    panel, click the launcher again, or press Esc to close it.
-  - Image sending has been removed — text messages only.
-  - Code: the logo reference now lives in ONE place, CSS is organized
-    into labeled sections with a consistent token scale, and the JS is
-    split into clearly commented modules instead of one long block.
-  ============================================================================
--->
-
-<!--EMBED START-->
 <style>
 /* ==========================================================================
    1. DESIGN TOKENS
@@ -68,6 +37,12 @@
     #mai-root, #mai-root *{ animation-duration: .001ms !important; transition-duration: .001ms !important; }
 }
 
+/* Isolate the widget's layout direction from the host page. Without this,
+   embedding on a page with <html dir="rtl"> (common on Arabic sites) flips
+   flexbox row order and breaks the avatar/bubble alignment below. Each
+   message bubble still gets its own dir="auto" so Arabic/English text
+   inside it shapes and aligns correctly regardless of this. */
+#mai-root{ direction: ltr; }
 #mai-root, #mai-root *{ box-sizing: border-box; font-family: var(--mai-font); }
 #mai-root :focus-visible{ outline: 2px solid var(--mai-primary-light); outline-offset: 2px; }
 
@@ -560,7 +535,7 @@
         </div>
 
         <div id="mai-input-row">
-            <textarea id="mai-message" autocomplete="off" placeholder="Write a message…" rows="1"></textarea>
+            <textarea id="mai-message" autocomplete="off" placeholder="Write a message…" rows="1" dir="auto"></textarea>
             <button id="mai-send" aria-label="Send message">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
@@ -580,6 +555,15 @@
     var WHATSAPP_NUMBER  = "201288818012"; // international format, digits only
     var MAX_HISTORY      = 60;
     var STATUS_CHECK_INTERVAL = 60 * 1000; // how often to re-check the system status
+
+    // Quick-reply chips shown alongside the welcome message for first-time
+    // visitors. Customize the labels for your business, or set to an empty
+    // array ([]) to disable chips entirely.
+    var QUICK_REPLIES = [
+        "الأسعار والباقات",
+        "أتكلم مع فريق الدعم",
+        "الكورسات المتاحة"
+    ];
 
     // Path to your logo image. Must be reachable from the page you embed
     // this on (same folder, or update to an absolute/relative path or a
@@ -818,11 +802,20 @@
         row.className = "mai-row " + (type === "user" ? "mai-row-user" : "mai-row-bot") + (grouped ? " mai-grouped" : "");
 
         if(type !== "user"){
-            var avatar = document.createElement("img");
-            avatar.className = "mai-avatar";
-            avatar.src = LOGO_URL;
-            avatar.alt = "";
-            row.appendChild(avatar);
+            // Only show the avatar on the first message of a consecutive
+            // group; grouped follow-ups get a same-width spacer so the
+            // bubbles still align, matching common chat-app conventions.
+            if(grouped){
+                var spacer = document.createElement("span");
+                spacer.className = "mai-avatar-spacer";
+                row.appendChild(spacer);
+            } else {
+                var avatar = document.createElement("img");
+                avatar.className = "mai-avatar";
+                avatar.src = LOGO_URL;
+                avatar.alt = "";
+                row.appendChild(avatar);
+            }
         }
 
         var bubble = document.createElement("div");
@@ -892,6 +885,7 @@
     }
 
     function renderQuickReplies(){
+        if(!QUICK_REPLIES || !QUICK_REPLIES.length) return;
         var wrap = document.createElement("div");
         wrap.className = "mai-chips";
         QUICK_REPLIES.forEach(function(label){
@@ -992,9 +986,15 @@
             history.forEach(function(entry){
                 addMessage("text", entry.content, entry.type, { date: new Date(entry.date), skipSave: true });
             });
+            return; // returning visitor with saved history — skip the intro & chips
         }
         addMessage("text", "👋 Hi there! Welcome to Milestones.\nHow can we help you today?", "bot", { skipSave: true });
         renderQuickReplies();
+    }
+
+    function resetMobileBoxSizing(){
+        box.style.height = "";
+        box.style.top = "";
     }
 
     function openChat(){
@@ -1025,6 +1025,7 @@
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
         menu.classList.remove("mai-open");
+        resetMobileBoxSizing();
         if(state.lastFocusedEl) state.lastFocusedEl.focus();
     }
 
@@ -1092,7 +1093,9 @@
     }
     input.addEventListener("input", function(){ refreshSendIcon(); autoResizeInput(); });
     input.addEventListener("keydown", function(e){
-        if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+        // isComposing guards against sending mid-keystroke while an IME
+        // (Chinese/Japanese/Korean input, etc.) is still composing the word.
+        if(e.key === "Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); sendMessage(); }
     });
     sendBtn.addEventListener("click", sendMessage);
 
@@ -1111,14 +1114,26 @@
        ====================================================================== */
     if(window.visualViewport){
         window.visualViewport.addEventListener("resize", function(){
-            if(!isMobile() || !box.classList.contains("mai-open")) return;
+            if(!isMobile() || !box.classList.contains("mai-open")){
+                resetMobileBoxSizing();
+                return;
+            }
             var vv = window.visualViewport;
-            var keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
+            // Shrink/reposition the panel to match the visible area so the
+            // input row stays above the on-screen keyboard instead of
+            // being covered by it.
+            box.style.top = vv.offsetTop + "px";
             box.style.height = vv.height + "px";
-            box.style.transform = "translateY(" + Math.max(0, keyboardHeight > 0 ? 0 : 0) + "px)";
             scrollToBottom(false);
         });
     }
+
+    // Safety net: if the viewport crosses back over the mobile breakpoint
+    // (e.g. rotating a tablet, or resizing a desktop browser window) while
+    // stale inline sizing is still applied, clear it so the CSS takes over.
+    window.addEventListener("resize", function(){
+        if(!isMobile()) resetMobileBoxSizing();
+    });
 
     /* ======================================================================
        INIT
@@ -1138,4 +1153,3 @@
     init();
 })();
 </script>
-<!--EMBED END-->
