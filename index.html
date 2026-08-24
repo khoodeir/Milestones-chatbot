@@ -53,14 +53,19 @@
     position: fixed;
     right: 24px;
     bottom: 24px;
-    width: 60px;
-    height: 60px;
+    width: 66px;
+    height: 66px;
     border: none;
     border-radius: 50%;
     background: #fff;
-    padding: 7px;
+    padding: 10px;
     cursor: pointer;
-    box-shadow: 0 0 0 3px #fff, var(--mai-shadow-md);
+    /* Thin brand-tinted border for definition on white pages, a soft
+       colored glow for presence, and a deeper drop shadow for lift. */
+    box-shadow:
+        0 0 0 1px rgba(41,35,95,.10),
+        0 0 0 8px rgba(41,35,95,.05),
+        0 14px 30px rgba(23,15,60,.20);
     transition: transform .2s var(--mai-ease), box-shadow .2s var(--mai-ease);
     z-index: 2147483000;
     display: flex;
@@ -68,18 +73,25 @@
     justify-content: center;
     animation: mai-breathe 3.2s ease-in-out infinite;
 }
-#mai-toggle:hover{ transform: scale(1.06); box-shadow: 0 0 0 3px #fff, 0 16px 40px rgba(23,15,60,.22); animation-play-state: paused; }
+#mai-toggle:hover{
+    transform: scale(1.06);
+    box-shadow:
+        0 0 0 1px rgba(41,35,95,.14),
+        0 0 0 9px rgba(41,35,95,.07),
+        0 18px 38px rgba(23,15,60,.26);
+    animation-play-state: paused;
+}
 #mai-toggle:active{ transform: scale(.96); animation-play-state: paused; }
 #mai-toggle img{ width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; }
 #mai-toggle.mai-has-unread{ animation: mai-pulse 1.8s var(--mai-ease) infinite; }
 
 @keyframes mai-breathe{
     0%, 100%{ transform: scale(1); }
-    50%{ transform: scale(1.05); }
+    50%{ transform: scale(1.04); }
 }
 @keyframes mai-pulse{
-    0%, 100%{ box-shadow: 0 0 0 3px #fff, 0 0 0 0 rgba(190,215,59,.55), var(--mai-shadow-md); }
-    50%{      box-shadow: 0 0 0 3px #fff, 0 0 0 9px rgba(190,215,59,0), var(--mai-shadow-md); }
+    0%, 100%{ box-shadow: 0 0 0 1px rgba(41,35,95,.10), 0 0 0 8px rgba(190,215,59,.35), 0 14px 30px rgba(23,15,60,.20); }
+    50%{      box-shadow: 0 0 0 1px rgba(41,35,95,.10), 0 0 0 12px rgba(190,215,59,0),   0 14px 30px rgba(23,15,60,.20); }
 }
 
 #mai-badge{
@@ -138,7 +150,7 @@
 #mai-box{
     position: fixed;
     right: 24px;
-    bottom: 96px;
+    bottom: 100px;
     width: 392px;
     height: 640px;
     max-height: calc(100vh - 130px);
@@ -559,11 +571,7 @@
     // Quick-reply chips shown alongside the welcome message for first-time
     // visitors. Customize the labels for your business, or set to an empty
     // array ([]) to disable chips entirely.
-    var QUICK_REPLIES = [
-        "الأسعار والباقات",
-        "أتكلم مع فريق الدعم",
-        "الكورسات المتاحة"
-    ];
+    var QUICK_REPLIES = [];
 
     // Path to your logo image. Must be reachable from the page you embed
     // this on (same folder, or update to an absolute/relative path or a
