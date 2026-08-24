@@ -1037,8 +1037,22 @@
     // Click anywhere outside the chat panel (and outside the launcher
     // button) closes the chat automatically. Clicks inside the panel
     // never close it.
+    //
+    // We track where the *gesture* (mousedown/touchstart) began, not just
+    // where the eventual "click" lands. On mobile, tapping a button while
+    // the keyboard is open often triggers a keyboard-dismiss + viewport
+    // resize in the same instant — the panel can shift underneath your
+    // finger between touch-down and touch-up, so the browser's synthesized
+    // click can end up targeting something outside the panel even though
+    // you tapped a button inside it (e.g. Send). Recording the gesture's
+    // start prevents that from ever closing the chat by mistake.
+    var maiGestureStartedInBox = false;
+    box.addEventListener("mousedown", function(){ maiGestureStartedInBox = true; });
+    box.addEventListener("touchstart", function(){ maiGestureStartedInBox = true; }, { passive: true });
+
     document.addEventListener("click", function(e){
         if(!box.classList.contains("mai-open")) return;
+        if(maiGestureStartedInBox){ maiGestureStartedInBox = false; return; }
         if(box.contains(e.target)) return;
         closeChat();
     });
