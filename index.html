@@ -324,9 +324,18 @@
     line-height: 1.48;
     font-size: 14.5px;
     word-wrap: break-word;
+    overflow-wrap: anywhere;
     white-space: pre-wrap;
+    text-align: start;
+    /* Choose RTL/LTR from the first strong character in the message. */
+    unicode-bidi: plaintext;
     animation: mai-msg-in .18s var(--mai-ease);
 }
+.mai-msg-text{
+    text-align: start;
+    unicode-bidi: plaintext;
+}
+
 @keyframes mai-msg-in{ from{ opacity: 0; transform: translateY(5px); } to{ opacity: 1; transform: none; } }
 
 .mai-user{
@@ -344,6 +353,9 @@
 .mai-meta{
     display: flex; align-items: center; gap: 4px;
     font-size: 10px; opacity: .65; margin-top: 3px;
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-align: end;
 }
 .mai-user .mai-meta{ justify-content: flex-end; }
 .mai-meta svg{ width: 12px; height: 12px; }
@@ -433,6 +445,8 @@
     max-height: 116px;
     line-height: 1.4;
     display: block;
+    text-align: start;
+    unicode-bidi: plaintext;
     transition: border-color .15s, box-shadow .15s;
 }
 #mai-message::placeholder{ color: #A1A3AF; }
@@ -831,12 +845,16 @@
         bubble.dir = "auto";
 
         var textDiv = document.createElement("div");
-        var html = linkifyPhones(escapeHtml(content)).replace(/\n/g, "<br>");
+        textDiv.className = "mai-msg-text";
+        textDiv.dir = "auto";
+        textDiv.style.unicodeBidi = "plaintext";
+        var html = linkifyPhones(escapeHtml(String(content))).replace(/\n/g, "<br>");
         textDiv.innerHTML = html;
         bubble.appendChild(textDiv);
 
         var meta = document.createElement("div");
         meta.className = "mai-meta";
+        meta.dir = "ltr";
         meta.innerHTML = '<span class="mai-meta-time">' + timeLabel(now) + "</span>";
         bubble.appendChild(meta);
 
